@@ -7,8 +7,6 @@ import bdv.util.BdvStackSource;
 import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelRegions;
 import net.imglib2.trainable_segmention.classification.Segmenter;
 import net.imglib2.trainable_segmention.classification.Trainer;
@@ -17,13 +15,9 @@ import net.imglib2.trainable_segmention.pixel_feature.filter.SingleFeatures;
 import net.imglib2.trainable_segmention.pixel_feature.settings.FeatureSettings;
 import net.imglib2.trainable_segmention.pixel_feature.settings.GlobalSettings;
 import net.imglib2.type.numeric.ARGBType;
-import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.integer.ByteType;
-import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Intervals;
-import net.imglib2.view.Views;
 import org.scijava.Context;
 
 import java.awt.*;
@@ -32,13 +26,13 @@ import java.util.Arrays;
 public class SegmenterDemo3D
 {
 
-	private final Utils utils = new Utils( new Context(  ) );
+	private final Utils utils = new Utils( new Context() );
 
 	private final RandomAccessibleInterval< FloatType > image = utils.loadFloatImage( "volvox.tif" );
 
 	private final RandomAccessibleInterval< UnsignedByteType > labelIndices = utils.loadByteImage( "volvoxLabeling2.tif" );
 
-	private final LabelRegions< String > labeling = setupLabeling( labelIndices );
+	private final LabelRegions< String > labeling = utils.setupLabeling( labelIndices );
 
 	public static void main( String... args )
 	{
@@ -60,7 +54,7 @@ public class SegmenterDemo3D
 				SingleFeatures.identity(),
 				GroupedFeatures.gauss()//,
 		// NB: Using the other features is to slow.
-		// It's possible to speed it by using tiling and lazy evaluation
+		// It's possible to speed it up by using tiling and lazy evaluation
 				//GroupedFeatures.hessian3D(false),
 				//GroupedFeatures.lipschitz(50 ),
 				//GroupedFeatures.differenceOfGaussians(),
@@ -87,18 +81,4 @@ public class SegmenterDemo3D
 		b.setDisplayRange( 0, maxIntensity );
 		return b;
 	}
-
-	// -- Helper methods --
-
-	private static LabelRegions< String > setupLabeling( RandomAccessibleInterval< ? extends IntegerType< ? > > img )
-	{
-		final ImgLabeling< String, IntType > labeling = new ImgLabeling<>( ArrayImgs.ints( Intervals.dimensionsAsLongArray(img)) );
-		Views.interval( Views.pair( img, labeling ), labeling ).forEach( p -> {
-			int value = p.getA().getInteger();
-			if ( value != 0 )
-				p.getB().add( Integer.toString( value ) );
-		} );
-		return new LabelRegions<>( labeling );
-	}
-
 }
