@@ -1,18 +1,18 @@
 package net.imglib2.trainable_segmentation.demo;
 
 import io.scif.services.DatasetIOService;
+import net.imagej.ops.OpService;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelRegions;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
 import org.scijava.Context;
 import org.scijava.plugin.Parameter;
@@ -25,6 +25,8 @@ public class Utils
 {
 	@Parameter private DatasetIOService ioService;
 
+	@Parameter private OpService ops;
+
 	Utils( Context context )
 	{
 		context.inject( this );
@@ -32,7 +34,7 @@ public class Utils
 
 	public LabelRegions< String > setupLabeling( RandomAccessibleInterval< ? extends IntegerType< ? > > img )
 	{
-		final ImgLabeling< String, IntType > labeling = new ImgLabeling<>( ArrayImgs.ints( Intervals.dimensionsAsLongArray( img ) ) );
+		final ImgLabeling< String, ? > labeling = new ImgLabeling<>( create( img , new UnsignedByteType() ) );
 		Views.interval( Views.pair( img, labeling ), labeling ).forEach( p -> {
 			int value = p.getA().getInteger();
 			if ( value != 0 )
@@ -75,5 +77,10 @@ public class Utils
 		if ( "file".equals( url.getProtocol() ) )
 			return url.getPath();
 		return url.toString();
+	}
+
+	public < T extends NativeType<T> > Img<T> create( Interval interval, T type )
+	{
+		return ops.create().img( interval, type );
 	}
 }
